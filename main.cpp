@@ -15,10 +15,10 @@ int main() {
 	sf::Event ev;
 	std::vector<std::thread> carThreads;
 	std::vector<Car> Cars;
-	Car car1(330, 20);
-	Car car2(20, 230);
-	carThreads.push_back(car1.moveThread(true));
-	carThreads.push_back(car2.moveThread(false));
+	Cars.push_back(Car(330, 20));
+	Cars.push_back(Car(20, 230));
+	carThreads.push_back(Cars[0].moveThread(true));
+	carThreads.push_back(Cars[1].moveThread(false));
 
 	carThreads.at(0).detach();
 	carThreads.at(1).detach();
@@ -49,11 +49,19 @@ int main() {
 				if (ev.key.code == sf::Keyboard::A)
 					std::cout << "A" << std::endl;
 				break;
+			case sf::Event::MouseMoved:
+				//std::cout << sf::Mouse::getPosition(window).x << " " << sf::Mouse::getPosition(window).y << std::endl;
+				for (auto car : Cars) {
+					if ((car.getPosition().x <= sf::Mouse::getPosition(window).x) && (car.getPosition().x + car.getSize().x >= sf::Mouse::getPosition(window).x) &&
+						(car.getPosition().y <= sf::Mouse::getPosition(window).y) && (car.getPosition().y + car.getSize().y >= sf::Mouse::getPosition(window).y))
+						std::cout << "W kwadracie!" << std::endl;
+					//std:: cout << car.getXpos() << " " << car.getYpos() << std::endl;
+				}
+				break;
+				
 			}
-			std::cout << sf::Mouse::getPosition(window).x<<" "<< sf::Mouse::getPosition(window).y<<std::endl;
+
 		}
-
-
 
 		//Update
 		window.clear(); //clear old frame
@@ -64,8 +72,8 @@ int main() {
 		//draw your game
 
 
-		window.draw(car1);
-		window.draw(car2);
+		window.draw(Cars[0]);
+		window.draw(Cars[1]);
 
 		window.display();
 	

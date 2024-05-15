@@ -13,6 +13,8 @@ int Car::getXpos() {
 }
 int Car::getYpos() {
 	return this->yPos;
+
+
 }
 void Car::UnicMove(bool p) {
 	while (true) {
