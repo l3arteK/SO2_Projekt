@@ -18,11 +18,14 @@ int Car::getYpos() {
 }
 void Car::UnicMove(bool p) {
 	while (true) {
-		if(p)
-		this->move(0, 1);
-		else
-		this->move(1, 0);
-		std::this_thread::sleep_for(std::chrono::microseconds(200));
+		if (this->mtx.try_lock()) {
+				if (p)
+					this->move(0, 1);
+				else
+					this->move(1, 0);
+			std::this_thread::sleep_for(std::chrono::microseconds(200));
+			mtx.unlock();
+		}
 	}
 		
 }
