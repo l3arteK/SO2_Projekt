@@ -16,15 +16,17 @@ int main() {
 	sf::Event ev;
 	std::vector<std::thread> carThreads;
 	std::vector<Car*> Cars;
-	Cars.push_back(new Car(330, 20));
-	Cars.push_back(new Car(20, 230));
+	Cars.push_back(new Car(330, 5));
+	Cars.push_back(new Car(330, 15));
 
 
 	carThreads.push_back(Cars[0]->moveThread(true));
 	carThreads.push_back(Cars[1]->moveThread(false));
+	std::thread collision_thread(Car::checkAllCollisions);
 
 	carThreads.at(0).detach();
 	carThreads.at(1).detach();
+	collision_thread.detach();
 
 
 
@@ -41,6 +43,8 @@ int main() {
 	vertical.setFillColor(sf::Color(128, 128, 128));
 	vertical.setPosition(300, 0);
 
+
+
 	while (window.isOpen()) {
 		while (window.pollEvent(ev)) {
 			switch (ev.type)
@@ -56,14 +60,16 @@ int main() {
 				break;
 			case sf::Event::MouseMoved:
 				//std::cout << sf::Mouse::getPosition(window).x << " " << sf::Mouse::getPosition(window).y << std::endl;
-				//for (const Car* car : Cars) {
-				//	if ((car->getPosition().x <= sf::Mouse::getPosition(window).x) && (car->getPosition().x + car->getSize().x >= sf::Mouse::getPosition(window).x) &&
-				//		(car->getPosition().y <= sf::Mouse::getPosition(window).y) && (car->getPosition().y + car->getSize().y >= sf::Mouse::getPosition(window).y)) {
-				//		std::cout << "W kwadracie!" << std::endl;
-				//		/*car->mtx.try_lock();*/
-				//	}
+				for (Car* car : Cars) {
+					if ((car->getPosition().x <= sf::Mouse::getPosition(window).x) && (car->getPosition().x + car->getSize().x >= sf::Mouse::getPosition(window).x) &&
+						(car->getPosition().y <= sf::Mouse::getPosition(window).y) && (car->getPosition().y + car->getSize().y >= sf::Mouse::getPosition(window).y)) {
+						std::cout << "W kwadracie!" << std::endl;
+						car->stopCar();
+					}
+					else
+						car->startCar();
 				//	/*std:: cout << car.getXpos() << " " << car.getYpos() << std::endl;*/
-				//}
+				}
 				break;
 				
 			}
@@ -78,7 +84,7 @@ int main() {
 
 		//draw your game
 
-
+		
 		window.draw(*Cars[0]);
 		window.draw(*Cars[1]);
 
