@@ -1,13 +1,20 @@
 #include "Car.h"
 #include <iostream>
-Car::Car(int xPosPar, int yPosPar) {
-	this->xPos = xPosPar;
-	this->yPos = yPosPar;
-	this->setPosition(xPos, yPos);
+Car::Car(int pos) {	
+	this->start_pos = pos;
+	if(start_pos == 1)
+		this->setPosition(340, 5);
+	if(start_pos == 2)
+		this->setPosition(10, 240);
+	if (start_pos == 3)
+		this->setPosition(760, 325);
+	if (start_pos == 4)
+		this->setPosition(425, 560);
+
+	this->speed = rand() % 5 + 1;
 	this->setSize(sf::Vector2f(25, 25));
 	this->setFillColor(sf::Color::White);
 	this->stop = false;
-	this->moving = false;
 	std::lock_guard<std::mutex> lock(mutex);
 	objects.push_back(this);
 }
@@ -25,23 +32,27 @@ void Car::startCar() {
 	this->stop = false;
 	cv_stop.notify_all();
 }
-void Car::UnicMove(bool p) {
+void Car::UnicMove() {
 	while (true) {
 		std::unique_lock<std::mutex> lock(mutex_stop);
 		cv_stop.wait(lock, [this] { return !stop; });
 		lock.unlock();
-		if (p)
-			move(0, 1);
-		else
-			move(1, 0);
+		if (this->start_pos == 1)
+			move(0, speed);
+		else if (this->start_pos == 2)
+			move(speed, 0);
+		else if (this->start_pos == 3)
+			move(-speed, 0);
+		else if (this->start_pos == 4)
+			move(0, -speed);
 		std::this_thread::sleep_for(std::chrono::microseconds(200));
 
 		
 	}
 		
 }
-std::thread Car::moveThread(bool p) {
-	return std::thread(&Car::UnicMove, this, p);
+std::thread Car::moveThread() {
+	return std::thread(&Car::UnicMove, this);
 
 }
 void Car::checkAllCollisions() {
@@ -51,7 +62,7 @@ void Car::checkAllCollisions() {
 		for (int i = 0; i < objects.size(); i++) {
 			for (int j = i + 1; j < objects.size(); j++) {
 				if (objects[i]->checkCollison(*objects[j])) {
-					std::cout << "Kolizja wykryta!" << std::endl;
+					/*std::cout << "Kolizja wykryta!" << std::endl;*/
 				}
 			}
 		}

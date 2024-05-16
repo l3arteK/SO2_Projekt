@@ -3,30 +3,44 @@
 #include <ctime>
 #include "Car.h"
 #include <thread>
-
+#include <cstdlib>
+#include <ctime>
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
 #include <SFML/Audio.hpp>
 #include <SFML/Network.hpp>
+std::vector<std::thread> carThreads;
+void addCar(int max) {
+	int i = 0;
+	while (i < max) {
+		new Car(rand()%4+1);
+		carThreads.push_back(Car::objects.at(i)->moveThread());
+		carThreads.at(i).detach();
+		std::this_thread::sleep_for(std::chrono::milliseconds(rand()%700 + 100*(max-i)));
+		i++;
+	}
+}
 
 int main() {
 
+	srand(time(NULL));
 	sf::RenderWindow window(sf::VideoMode(800, 600), "Symulator_ruchu_drogowe", sf::Style::Titlebar | sf::Style::Close);
 	sf::Event ev;
-	std::vector<std::thread> carThreads;
-	std::vector<Car*> Cars;
-	Cars.push_back(new Car(330, 5));
-	Cars.push_back(new Car(330, 15));
 
+	//Cars.push_back(new Car(1));
+	//Cars.push_back(new Car(2));
+	/*góra 340 5 425 5
+		//lewo 10 240 10 325
+		prawo 760 240 760 325
+		do³ 340 560 425 560
+		*/ 
 
-	carThreads.push_back(Cars[0]->moveThread(true));
-	carThreads.push_back(Cars[1]->moveThread(false));
+	std::thread addCar_thread(addCar, 20);
 	std::thread collision_thread(Car::checkAllCollisions);
 
-	carThreads.at(0).detach();
-	carThreads.at(1).detach();
 	collision_thread.detach();
+	addCar_thread.detach();
 
 
 
@@ -59,8 +73,8 @@ int main() {
 					std::cout << "A" << std::endl;
 				break;
 			case sf::Event::MouseMoved:
-				//std::cout << sf::Mouse::getPosition(window).x << " " << sf::Mouse::getPosition(window).y << std::endl;
-				for (Car* car : Cars) {
+				std::cout << sf::Mouse::getPosition(window).x << " " << sf::Mouse::getPosition(window).y << std::endl;
+				for (Car* car : Car::objects) {
 					if ((car->getPosition().x <= sf::Mouse::getPosition(window).x) && (car->getPosition().x + car->getSize().x >= sf::Mouse::getPosition(window).x) &&
 						(car->getPosition().y <= sf::Mouse::getPosition(window).y) && (car->getPosition().y + car->getSize().y >= sf::Mouse::getPosition(window).y)) {
 						std::cout << "W kwadracie!" << std::endl;
@@ -85,8 +99,9 @@ int main() {
 		//draw your game
 
 		
-		window.draw(*Cars[0]);
-		window.draw(*Cars[1]);
+		for (auto &obj : Car::objects) {
+			window.draw(*obj);
+		}
 
 		window.display();
 	

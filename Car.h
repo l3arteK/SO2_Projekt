@@ -9,23 +9,22 @@
 #include <condition_variable>
 class Car :public sf::RectangleShape{
 public:
-	Car(int xPos, int yPos);
+	Car(int pos);
 	static std::vector<Car*> objects;
 	static std::mutex mutex;
 	static void checkAllCollisions();
-	std::thread moveThread(bool p);
+	std::thread moveThread();
 	bool checkCollison(const Car& other);
 	std::pair<int, int> getPos() const;
 	void stopCar();
 	void startCar();
 private:
-	int xPos;
-	int yPos;
-	void UnicMove(bool p);
+	void UnicMove();
 	std::mutex mutex_stop;
 	bool stop;
 	std::condition_variable cv_stop;
-	bool moving;
+	int start_pos;
+	float speed;
 
 
 	
