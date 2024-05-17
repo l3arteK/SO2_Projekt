@@ -10,24 +10,29 @@
 class Car :public sf::RectangleShape{
 public:
 	~Car();
-	Car(int pos);
+	Car();
 	static std::vector<Car*> objects;
 	static std::mutex mutex;
 	static void checkAllCollisions();
 	std::thread moveThread();
-	bool checkCollison(const Car& other);
-	std::pair<int, int> getPos() const;
+	bool checkCollison(Car& other);
+	std::pair<float, float> getPos() ;
 	void stopCar();
 	void startCar();
 	std::atomic<bool> moving = true;
 	static std::atomic<bool> checkingCollision;
+	void setScreenSize(int width_screen, int height_screen);
 private:
 	void UnicMove();
 	std::mutex mutex_stop;
+	std::mutex mtx_getPos;
 	bool stop;
 	std::condition_variable cv_stop;
 	int start_pos;
 	float speed;
+	static int width_screen, height_screen;
+	void setStats();
+	
 	
 
 

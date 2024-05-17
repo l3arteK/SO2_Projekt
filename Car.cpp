@@ -1,54 +1,61 @@
 #include "Car.h"
 #include <iostream>
-Car::Car(int pos) {	
-	this->start_pos = pos;
-	if(start_pos == 1)
-		this->setPosition(340, 5);
-	if(start_pos == 2)
-		this->setPosition(10, 240);
-	if (start_pos == 3)
-		this->setPosition(760, 325);
-	if (start_pos == 4)
-		this->setPosition(425, 560);
-
-	this->speed = rand() % 5 + 1;
-	this->setSize(sf::Vector2f(25, 25));
-	this->setFillColor(sf::Color::White);
+Car::Car() {	
+	
+	setStats();
+	
 	this->stop = false;
 	std::lock_guard<std::mutex> lock(mutex);
 	objects.push_back(this);
 }
-std::pair<int, int> Car::getPos() const {
+std::pair<float, float> Car::getPos()  {
+	std::lock_guard<std::mutex> lock(mtx_getPos);
 	sf::Vector2f vec = this->getPosition();
 	return { vec.x, vec.y };
 }
 void Car::stopCar() {
-	std::unique_lock<std::mutex> lock(mutex_stop);
-	this->stop = true;
-	cv_stop.notify_all();
+	if(!this->stop){
+		std::unique_lock<std::mutex> lock(mutex_stop);
+		this->stop = true;
+		cv_stop.notify_all();
+	}
+
 }
 void Car::startCar() {
-	std::unique_lock<std::mutex> lock(mutex_stop);
-	this->stop = false;
-	cv_stop.notify_all();
+	if (this->stop) {
+		std::unique_lock<std::mutex> lock(mutex_stop);
+		this->stop = false;
+		cv_stop.notify_all();
+	}
+
+}
+void Car::setScreenSize(int width_screen, int height_screen)
+{
+	this->width_screen = width_screen;
+	this->height_screen = height_screen;
 }
 void Car::UnicMove() {
 	while (moving) {
 		std::unique_lock<std::mutex> lock(mutex_stop);
-		cv_stop.wait(lock, [this] { return !stop || !moving; });
+		cv_stop.wait(lock, [this] { return !stop; });
 		lock.unlock();
-		if (!moving) break;
-		if (this->start_pos == 1)
-			move(0, speed);
-		else if (this->start_pos == 2)
-			move(speed, 0);
-		else if (this->start_pos == 3)
-			move(-speed, 0);
-		else if (this->start_pos == 4)
-			move(0, -speed);
-		std::this_thread::sleep_for(std::chrono::seconds(2));
+		std::pair<int, int> pos = this->getPos();
+		if ((pos.first < width_screen+20 && pos.first > -30) && (pos.second < height_screen+20 && pos.second > -30)) {
+			if (this->start_pos == 1)
+				move(0, speed);
+			else if (this->start_pos == 2)
+				move(speed, 0);
+			else if (this->start_pos == 3)
+				move(-speed, 0);
+			else if (this->start_pos == 4)
+				move(0, -speed);
+			std::this_thread::sleep_for(std::chrono::microseconds(rand() % 500 + 200));
+		}
+		else {
+			this->setStats();
+		}
 		std::cout << "moving: " << std::this_thread::get_id() << std::endl;
-	}
+	} 
 	std::cout << "terminate_moving: " << std::this_thread::get_id() << std::endl;	
 }
 std::thread Car::moveThread() {
@@ -69,8 +76,22 @@ void Car::checkAllCollisions() {
 	}
 	std::cout << "terminate_checkAllCollisions: " << std::this_thread::get_id() << std::endl;
 }
+void Car::setStats() {
+	this->start_pos = rand() % 4 + 1;
+	this->speed = rand() % 5 + 1;
+	this->setSize(sf::Vector2f(25, 25));
+	this->setFillColor(sf::Color::White);
 
- bool Car::checkCollison(const Car& other) {
+	if (start_pos == 1)
+		this->setPosition(340, -20);
+	else if (start_pos == 2)
+		this->setPosition(-20, 240);
+	else if (start_pos == 3)
+		this->setPosition(this->width_screen, 325);
+	else if (start_pos == 4)
+		this->setPosition(425, this->height_screen);
+}
+ bool Car::checkCollison( Car& other) {
 	 std::pair<float, float> othPos = other.getPos();
 	 std::pair<float, float> thisPos = this->getPos();
 	 int size1_x = this->getSize().x;
@@ -92,12 +113,8 @@ void Car::checkAllCollisions() {
 	 return (!(x1_2 < x2_1 || x1_1 > x2_2 || y1_2 < y2_1 || y1_1 >  y2_2));
  }
  Car::~Car() { 
-	 {
-		 std::unique_lock<std::mutex> lock(mutex_stop);
-		 this->stopCar();
-		 this->moving = false;
-		 cv_stop.notify_all();
-	 }
+	 std::unique_lock<std::mutex> lock_(mutex_stop);
+
 
 	 std::lock_guard<std::mutex> lock(Car::mutex);
 	 auto it = std::find(Car::objects.begin(), Car::objects.end(), this);
@@ -110,3 +127,5 @@ void Car::checkAllCollisions() {
  std::mutex Car::mutex;
  std::vector<Car*> Car::objects;
  std::atomic<bool> Car::checkingCollision = true;
+ int Car::height_screen = 600;
+ int Car::width_screen = 800;

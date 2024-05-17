@@ -10,30 +10,33 @@
 #include <SFML/Window.hpp>
 #include <SFML/Audio.hpp>
 #include <SFML/Network.hpp>
+int max_height = 600, max_width = 800;
 std::vector<std::thread> carThreads;
 std::thread addCar_thread;
 std::thread collision_thread;
 std::mutex mtx_initGame;
 std::condition_variable cv_initGame;
-std::atomic<int>addedCar = 0;
+std::atomic<int>carsOnScreen = 0;
 std::atomic<bool> finish = false;
 void addCar(int max) {
 	
-	while (addedCar < max && !finish) {
-			mtx_initGame.lock();
-			new Car(rand() % 4 + 1);
-			carThreads.push_back(Car::objects.at(addedCar)->moveThread());
+	while (!finish) {
+			if (Car::objects.size() < max) {
+				mtx_initGame.lock();
+				new Car();
+				carThreads.push_back(Car::objects.at(carsOnScreen)->moveThread());
+				carsOnScreen++;
+				mtx_initGame.unlock();
+			}
 			if(!finish)
-				std::this_thread::sleep_for(std::chrono::milliseconds(rand() % 700 + 100 * (max - addedCar)));
-			addedCar++;
-			mtx_initGame.unlock();
+				std::this_thread::sleep_for(std::chrono::milliseconds(rand() % 700 + 100 * (max - carsOnScreen)));
 			std::cout << std::this_thread::get_id() << std::endl;
 		}
 	std::cout <<"terminate_addCar: " << std::this_thread::get_id() << std::endl;
 	}
 void initGame(){
 
-	addCar_thread = std::thread(addCar, 20);
+	addCar_thread = std::thread(addCar, 5);
 	collision_thread = std::thread(Car::checkAllCollisions);
 
 }
@@ -46,6 +49,7 @@ void resetGame() {
 	finish = true;
 	for (auto& obj : Car::objects) {
 		obj->moving = false;
+		obj->startCar();
 	}
 	for (auto &obj : carThreads) {
 		if (obj.joinable()) {
@@ -66,7 +70,7 @@ void resetGame() {
 		std::cout << "join addCar_threaeed" << std::endl;
 	}
 	Car::checkingCollision = true;
-	addedCar = 0;
+	carsOnScreen = 0;
 	finish = false;
 
 	initGame();
@@ -77,7 +81,7 @@ void resetGame() {
 int main() {
 
 	srand(time(NULL));
-	sf::RenderWindow window(sf::VideoMode(800, 600), "Symulator_ruchu_drogowe", sf::Style::Titlebar | sf::Style::Close);
+	sf::RenderWindow window(sf::VideoMode(max_width, max_height), "Symulator_ruchu_drogowe", sf::Style::Titlebar | sf::Style::Close);
 	sf::Event ev;
 
 	//Cars.push_back(new Car(1));
