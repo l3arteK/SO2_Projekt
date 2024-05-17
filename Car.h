@@ -9,6 +9,7 @@
 #include <condition_variable>
 class Car :public sf::RectangleShape{
 public:
+	~Car();
 	Car(int pos);
 	static std::vector<Car*> objects;
 	static std::mutex mutex;
@@ -18,6 +19,8 @@ public:
 	std::pair<int, int> getPos() const;
 	void stopCar();
 	void startCar();
+	std::atomic<bool> moving = true;
+	static std::atomic<bool> checkingCollision;
 private:
 	void UnicMove();
 	std::mutex mutex_stop;
@@ -25,6 +28,7 @@ private:
 	std::condition_variable cv_stop;
 	int start_pos;
 	float speed;
+	
 
 
 	

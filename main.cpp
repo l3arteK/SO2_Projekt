@@ -11,15 +11,67 @@
 #include <SFML/Audio.hpp>
 #include <SFML/Network.hpp>
 std::vector<std::thread> carThreads;
+std::thread addCar_thread;
+std::thread collision_thread;
+std::mutex mtx_initGame;
+std::condition_variable cv_initGame;
+std::atomic<int>addedCar = 0;
+std::atomic<bool> finish = false;
 void addCar(int max) {
-	int i = 0;
-	while (i < max) {
-		new Car(rand()%4+1);
-		carThreads.push_back(Car::objects.at(i)->moveThread());
-		carThreads.at(i).detach();
-		std::this_thread::sleep_for(std::chrono::milliseconds(rand()%700 + 100*(max-i)));
-		i++;
+	
+	while (addedCar < max && !finish) {
+			mtx_initGame.lock();
+			new Car(rand() % 4 + 1);
+			carThreads.push_back(Car::objects.at(addedCar)->moveThread());
+			if(!finish)
+				std::this_thread::sleep_for(std::chrono::milliseconds(rand() % 700 + 100 * (max - addedCar)));
+			addedCar++;
+			mtx_initGame.unlock();
+			std::cout << std::this_thread::get_id() << std::endl;
+		}
+	std::cout <<"terminate_addCar: " << std::this_thread::get_id() << std::endl;
 	}
+void initGame(){
+
+	addCar_thread = std::thread(addCar, 20);
+	collision_thread = std::thread(Car::checkAllCollisions);
+
+}
+void resetGame() {
+	mtx_initGame.lock();
+	
+	
+	
+	Car::checkingCollision = false;
+	finish = true;
+	for (auto& obj : Car::objects) {
+		obj->moving = false;
+	}
+	for (auto &obj : carThreads) {
+		if (obj.joinable()) {
+			obj.join();
+			std::cout << "join carMove_threaeed" << std::endl;
+		}
+	}
+	Car::objects.clear();
+	carThreads.clear();
+	
+
+	if (collision_thread.joinable()) {
+		collision_thread.join();
+		std::cout << "join collision_threaeed" << std::endl;
+	}
+	if (addCar_thread.joinable()) {
+		addCar_thread.join();
+		std::cout << "join addCar_threaeed" << std::endl;
+	}
+	Car::checkingCollision = true;
+	addedCar = 0;
+	finish = false;
+
+	initGame();
+	mtx_initGame.unlock();
+	
 }
 
 int main() {
@@ -36,11 +88,7 @@ int main() {
 		do³ 340 560 425 560
 		*/ 
 
-	std::thread addCar_thread(addCar, 20);
-	std::thread collision_thread(Car::checkAllCollisions);
-
-	collision_thread.detach();
-	addCar_thread.detach();
+	initGame();
 
 
 
@@ -70,14 +118,14 @@ int main() {
 				if (ev.key.code == sf::Keyboard::Escape)
 					window.close();
 				if (ev.key.code == sf::Keyboard::A)
-					std::cout << "A" << std::endl;
+					resetGame();
 				break;
 			case sf::Event::MouseMoved:
-				std::cout << sf::Mouse::getPosition(window).x << " " << sf::Mouse::getPosition(window).y << std::endl;
+				/*std::cout << sf::Mouse::getPosition(window).x << " " << sf::Mouse::getPosition(window).y << std::endl;*/
 				for (Car* car : Car::objects) {
 					if ((car->getPosition().x <= sf::Mouse::getPosition(window).x) && (car->getPosition().x + car->getSize().x >= sf::Mouse::getPosition(window).x) &&
 						(car->getPosition().y <= sf::Mouse::getPosition(window).y) && (car->getPosition().y + car->getSize().y >= sf::Mouse::getPosition(window).y)) {
-						std::cout << "W kwadracie!" << std::endl;
+						/*std::cout << "W kwadracie!" << std::endl;*/
 						car->stopCar();
 					}
 					else

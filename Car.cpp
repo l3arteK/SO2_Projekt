@@ -25,7 +25,7 @@ std::pair<int, int> Car::getPos() const {
 void Car::stopCar() {
 	std::unique_lock<std::mutex> lock(mutex_stop);
 	this->stop = true;
-
+	cv_stop.notify_all();
 }
 void Car::startCar() {
 	std::unique_lock<std::mutex> lock(mutex_stop);
@@ -33,10 +33,11 @@ void Car::startCar() {
 	cv_stop.notify_all();
 }
 void Car::UnicMove() {
-	while (true) {
+	while (moving) {
 		std::unique_lock<std::mutex> lock(mutex_stop);
-		cv_stop.wait(lock, [this] { return !stop; });
+		cv_stop.wait(lock, [this] { return !stop || !moving; });
 		lock.unlock();
+		if (!moving) break;
 		if (this->start_pos == 1)
 			move(0, speed);
 		else if (this->start_pos == 2)
@@ -45,19 +46,18 @@ void Car::UnicMove() {
 			move(-speed, 0);
 		else if (this->start_pos == 4)
 			move(0, -speed);
-		std::this_thread::sleep_for(std::chrono::microseconds(200));
-
-		
+		std::this_thread::sleep_for(std::chrono::seconds(2));
+		std::cout << "moving: " << std::this_thread::get_id() << std::endl;
 	}
-		
+	std::cout << "terminate_moving: " << std::this_thread::get_id() << std::endl;	
 }
 std::thread Car::moveThread() {
 	return std::thread(&Car::UnicMove, this);
 
 }
 void Car::checkAllCollisions() {
-	
-	while (true) {
+	std::cout << "start_checkAllCollisions: " << std::this_thread::get_id() << std::endl;
+	while (checkingCollision) {
 		std::lock_guard<std::mutex> lock(mutex);
 		for (int i = 0; i < objects.size(); i++) {
 			for (int j = i + 1; j < objects.size(); j++) {
@@ -67,6 +67,7 @@ void Car::checkAllCollisions() {
 			}
 		}
 	}
+	std::cout << "terminate_checkAllCollisions: " << std::this_thread::get_id() << std::endl;
 }
 
  bool Car::checkCollison(const Car& other) {
@@ -90,5 +91,22 @@ void Car::checkAllCollisions() {
 	 //std::cout << thisPos.first << " " << thisPos.second << std::endl;
 	 return (!(x1_2 < x2_1 || x1_1 > x2_2 || y1_2 < y2_1 || y1_1 >  y2_2));
  }
+ Car::~Car() { 
+	 {
+		 std::unique_lock<std::mutex> lock(mutex_stop);
+		 this->stopCar();
+		 this->moving = false;
+		 cv_stop.notify_all();
+	 }
+
+	 std::lock_guard<std::mutex> lock(Car::mutex);
+	 auto it = std::find(Car::objects.begin(), Car::objects.end(), this);
+	 if (it != Car::objects.end()) {
+		 Car::objects.erase(it);
+	 }
+ }
+
+
  std::mutex Car::mutex;
  std::vector<Car*> Car::objects;
+ std::atomic<bool> Car::checkingCollision = true;
