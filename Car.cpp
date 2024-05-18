@@ -40,7 +40,7 @@ void Car::UnicMove() {
 		cv_stop.wait(lock, [this] { return !stop; });
 		lock.unlock();
 		std::pair<int, int> pos = this->getPos();
-		if ((pos.first < width_screen+20 && pos.first > -30) && (pos.second < height_screen+20 && pos.second > -30)) {
+		if ((pos.first < width_screen+60 && pos.first > -60) && (pos.second < height_screen+60 && pos.second > -60)) {
 			if (this->start_pos == 1)
 				move(0, speed);
 			else if (this->start_pos == 2)
@@ -69,7 +69,9 @@ void Car::checkAllCollisions() {
 		for (int i = 0; i < objects.size(); i++) {
 			for (int j = i + 1; j < objects.size(); j++) {
 				if (objects[i]->checkCollison(*objects[j])) {
-					/*std::cout << "Kolizja wykryta!" << std::endl;*/
+					objects[i]->setStats();
+					objects[j]->setStats();
+					collision = true;
 				}
 			}
 		}
@@ -83,13 +85,13 @@ void Car::setStats() {
 	this->setFillColor(sf::Color::White);
 
 	if (start_pos == 1)
-		this->setPosition(340, -20);
+		this->setPosition(340, -50);
 	else if (start_pos == 2)
-		this->setPosition(-20, 240);
+		this->setPosition(-50, 240);
 	else if (start_pos == 3)
-		this->setPosition(this->width_screen, 325);
+		this->setPosition(this->width_screen+50, 325);
 	else if (start_pos == 4)
-		this->setPosition(425, this->height_screen);
+		this->setPosition(425, this->height_screen+50);
 }
  bool Car::checkCollison( Car& other) {
 	 std::pair<float, float> othPos = other.getPos();
@@ -113,9 +115,7 @@ void Car::setStats() {
 	 return (!(x1_2 < x2_1 || x1_1 > x2_2 || y1_2 < y2_1 || y1_1 >  y2_2));
  }
  Car::~Car() { 
-	 std::unique_lock<std::mutex> lock_(mutex_stop);
-
-
+	 
 	 std::lock_guard<std::mutex> lock(Car::mutex);
 	 auto it = std::find(Car::objects.begin(), Car::objects.end(), this);
 	 if (it != Car::objects.end()) {
@@ -129,3 +129,4 @@ void Car::setStats() {
  std::atomic<bool> Car::checkingCollision = true;
  int Car::height_screen = 600;
  int Car::width_screen = 800;
+ bool Car::collision = false;

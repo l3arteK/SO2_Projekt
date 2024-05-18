@@ -22,6 +22,7 @@ public:
 	std::atomic<bool> moving = true;
 	static std::atomic<bool> checkingCollision;
 	void setScreenSize(int width_screen, int height_screen);
+	static bool collision;
 private:
 	void UnicMove();
 	std::mutex mutex_stop;
