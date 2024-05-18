@@ -7,6 +7,7 @@ Car::Car() {
 	this->stop = false;
 	std::lock_guard<std::mutex> lock(mutex);
 	objects.push_back(this);
+	this->mvThread = std::thread(&Car::UnicMove, this);
 }
 std::pair<float, float> Car::getPos()  {
 	std::lock_guard<std::mutex> lock(mtx_getPos);
@@ -54,7 +55,7 @@ void Car::UnicMove() {
 		else {
 			this->setStats();
 		}
-		std::cout << "moving: " << std::this_thread::get_id() << std::endl;
+		/*std::cout << "moving: " << std::this_thread::get_id() << std::endl;*/
 	} 
 	std::cout << "terminate_moving: " << std::this_thread::get_id() << std::endl;	
 }
@@ -69,8 +70,6 @@ void Car::checkAllCollisions() {
 		for (int i = 0; i < objects.size(); i++) {
 			for (int j = i + 1; j < objects.size(); j++) {
 				if (objects[i]->checkCollison(*objects[j])) {
-					objects[i]->setStats();
-					objects[j]->setStats();
 					collision = true;
 				}
 			}
@@ -92,6 +91,7 @@ void Car::setStats() {
 		this->setPosition(this->width_screen+50, 325);
 	else if (start_pos == 4)
 		this->setPosition(425, this->height_screen+50);
+	
 }
  bool Car::checkCollison( Car& other) {
 	 std::pair<float, float> othPos = other.getPos();
@@ -115,7 +115,16 @@ void Car::setStats() {
 	 return (!(x1_2 < x2_1 || x1_1 > x2_2 || y1_2 < y2_1 || y1_1 >  y2_2));
  }
  Car::~Car() { 
-	 
+	 std::unique_lock<std::mutex> lock1(mutex_stop);
+	 this->startCar();
+	 this->moving = false;
+	 lock1.unlock();
+	 if (mvThread.joinable()) {
+		 mvThread.join();
+		 std::cout << "mvThread join" << std::endl;
+	 }
+		
+
 	 std::lock_guard<std::mutex> lock(Car::mutex);
 	 auto it = std::find(Car::objects.begin(), Car::objects.end(), this);
 	 if (it != Car::objects.end()) {

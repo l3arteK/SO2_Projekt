@@ -27,7 +27,7 @@ void addCar() {
 			if (Car::objects.size() < maxCars_) {
 				mtx_initGame.lock();
 				new Car();
-				carThreads.push_back(Car::objects.at(carsOnScreen)->moveThread());
+				/*carThreads.push_back(Car::objects.at(carsOnScreen)->moveThread());*/
 				carsOnScreen++;
 				mtx_initGame.unlock();
 			}
@@ -52,16 +52,16 @@ void resetGame(bool r = true) {
 	finish = true;
 
 	//aby mozna bylo zakonczyc watek poruszajacy samochodami
-	for (auto& obj : Car::objects) {
-		obj->moving = false;
-		obj->startCar();
-	}
-	for (auto &obj : carThreads) {
-		if (obj.joinable()) 
-			obj.join();
-	}
+	//for (auto& obj : Car::objects) {
+	//	obj->moving = false;
+	//	obj->startCar();
+	//}
+	//for (auto &obj : carThreads) {
+	//	if (obj.joinable()) 
+	//		obj.join();
+	//}
 	Car::objects.clear();
-	carThreads.clear();
+	//carThreads.clear();
 	
 
 	if (collision_thread.joinable()) 
