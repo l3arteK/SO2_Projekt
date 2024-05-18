@@ -121,20 +121,20 @@ int main() {
 
 
 	while (window.isOpen()) {
-		if (Car::collision) {
-			if (hearts.size() > 0)
-				hearts.pop_back();
-			else {
-				resetGame(false);
-				showMenu = true;
-			}
-			Car::collision = false;
-		}
+		//if (Car::collision) {
+		//	if (hearts.s)
+		//		hearts.pop_back();
+		//	else {
+		//		resetGame(false);
+		//		showMenu = true;
+		//	}
+		//	Car::collision = false;
+		//}
 		while (window.pollEvent(ev)) {
 			if (showMenu)
 			{
 				int option = menu.handleEvent(ev);
-				std::cout << "Option: " << option << std::endl;
+				//std::cout << "Option: " << option << std::endl;
 				if (option == 0) {
 					maxCars_ = menu.getMaxCars();
 					initGame();

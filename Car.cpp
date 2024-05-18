@@ -5,7 +5,7 @@ Car::Car() {
 	setStats();
 	
 	this->stop = false;
-	std::lock_guard<std::mutex> lock(mutex);
+	std::unique_lock<std::mutex> lock(Car::mutex);
 	objects.push_back(this);
 	this->mvThread = std::thread(&Car::UnicMove, this);
 }
@@ -57,7 +57,7 @@ void Car::UnicMove() {
 		}
 		/*std::cout << "moving: " << std::this_thread::get_id() << std::endl;*/
 	} 
-	std::cout << "terminate_moving: " << std::this_thread::get_id() << std::endl;	
+	//std::cout << "terminate_moving: " << std::this_thread::get_id() << std::endl;	
 }
 std::thread Car::moveThread() {
 	return std::thread(&Car::UnicMove, this);
@@ -66,14 +66,26 @@ std::thread Car::moveThread() {
 void Car::checkAllCollisions() {
 	std::cout << "start_checkAllCollisions: " << std::this_thread::get_id() << std::endl;
 	while (checkingCollision) {
-		std::lock_guard<std::mutex> lock(mutex);
+		std::unique_lock<std::mutex> lock(Car::mutex);
 		for (int i = 0; i < objects.size(); i++) {
 			for (int j = i + 1; j < objects.size(); j++) {
 				if (objects[i]->checkCollison(*objects[j])) {
 					collision = true;
+					std::cout << "Kolizja!" << std::endl;
+					Car* c1 = objects[i];
+					Car* c2 = objects[j];
+					lock.unlock();
+					c1->~Car();
+					c2->~Car();
+					break;
 				}
 			}
+			if (collision) {
+				collision = false;
+				break;
+			}
 		}
+	
 	}
 	std::cout << "terminate_checkAllCollisions: " << std::this_thread::get_id() << std::endl;
 }
@@ -116,19 +128,22 @@ void Car::setStats() {
  }
  Car::~Car() { 
 	 std::unique_lock<std::mutex> lock1(mutex_stop);
+	 std::cout << "destructor Car!" << std::endl;
 	 this->startCar();
 	 this->moving = false;
 	 lock1.unlock();
 	 if (mvThread.joinable()) {
 		 mvThread.join();
-		 std::cout << "mvThread join" << std::endl;
+		 //std::cout << "mvThread join" << std::endl;
 	 }
 		
 
-	 std::lock_guard<std::mutex> lock(Car::mutex);
+	 std::unique_lock<std::mutex> lock(Car::mutex);
 	 auto it = std::find(Car::objects.begin(), Car::objects.end(), this);
 	 if (it != Car::objects.end()) {
+		 std::cout << Car::objects.size() << std::endl;
 		 Car::objects.erase(it);
+		 std::cout << Car::objects.size() << std::endl;
 	 }
  }
 
