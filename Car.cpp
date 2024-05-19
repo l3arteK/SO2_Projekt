@@ -76,7 +76,7 @@ void Car::checkAllCollisions() {
 					Car* c2 = objects[j];
 					lock.unlock();
 					c1->~Car();
-					c2->~Car();
+					//c2->~Car();
 					break;
 				}
 			}
@@ -129,12 +129,12 @@ void Car::setStats() {
  Car::~Car() { 
 	 std::unique_lock<std::mutex> lock1(mutex_stop);
 	 std::cout << "destructor Car!" << std::endl;
-	 this->startCar();
 	 this->moving = false;
 	 lock1.unlock();
+	 this->startCar();
 	 if (mvThread.joinable()) {
 		 mvThread.join();
-		 //std::cout << "mvThread join" << std::endl;
+		 std::cout << "mvThread join" << std::endl;
 	 }
 		
 
