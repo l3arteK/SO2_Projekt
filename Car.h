@@ -32,6 +32,7 @@ private:
 	int start_pos;
 	float speed;
 	static int width_screen, height_screen;
+	int turn;
 	std::thread mvThread;
 	void setStats();
 	

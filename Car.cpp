@@ -3,7 +3,7 @@
 Car::Car() {	
 	
 	setStats();
-	
+	this->turn = rand() % 2 + 1;
 	this->stop = false;
 	std::unique_lock<std::mutex> lock(Car::mutex);
 	objects.push_back(this);
@@ -42,15 +42,57 @@ void Car::UnicMove() {
 		lock.unlock();
 		std::pair<int, int> pos = this->getPos();
 		if ((pos.first < width_screen+60 && pos.first > -60) && (pos.second < height_screen+60 && pos.second > -60)) {
-			if (this->start_pos == 1)
-				move(0, speed);
-			else if (this->start_pos == 2)
-				move(speed, 0);
-			else if (this->start_pos == 3)
-				move(-speed, 0);
+			if (this->start_pos == 1) {
+				if (turn != 0) {
+					if (pos.second < (height_screen / 2) + this->getSize().y)
+						move(0, speed);
+					else if (turn == 1)
+						move(speed, 0);
+					else if (turn == 2)
+						move(-speed, 0);
+				}else
+					move(0, speed);
+			}
+			else if (this->start_pos == 2) {
+				if (turn != 0) {
+					if (pos.first < (width_screen / 2) + this->getSize().x)
+						move(speed, 0);
+					else if (turn == 1)
+						move(0, speed);
+					else if (turn == 2)
+						move(0,-speed);
+				}
+				else
+					move(speed, 0);
+			}
+			else if (this->start_pos == 3){
+				if (turn != 0) {
+					if (pos.first > (width_screen / 2) + this->getSize().x)
+						move(-speed, 0);
+					else if (turn == 1)
+						move(0, speed);
+					else if (turn == 2)
+						move(0, -speed);
+				}
+				else
+					move(-speed, 0);
+
+				}
 			else if (this->start_pos == 4)
-				move(0, -speed);
-			std::this_thread::sleep_for(std::chrono::microseconds(rand() % 500 + 200));
+			{
+				if (turn != 0) {
+					if (pos.first > (height_screen / 2) + this->getSize().x)
+						move(0, -speed);
+					else if (turn == 1)
+						move(speed, 0);
+					else if (turn == 2)
+						move(-speed, 0);
+				}
+				else
+					move(0, -speed);
+
+			}	
+		std::this_thread::sleep_for(std::chrono::microseconds(rand()%500 + 200));
 		}
 		else {
 			this->setStats();
@@ -75,7 +117,7 @@ void Car::checkAllCollisions() {
 					Car* c1 = objects[i];
 					Car* c2 = objects[j];
 					lock.unlock();
-					c1->~Car();
+					//c1->~Car();
 					//c2->~Car();
 					break;
 				}

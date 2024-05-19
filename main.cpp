@@ -111,15 +111,15 @@ int main() {
 
 
 	while (window.isOpen()) {
-		if (Car::collision) {
-			if (hearts.size() > 0)
-				hearts.pop_back();
-			else {
-				resetGame(false);
-				showMenu = true;
-			}
-			Car::collision = false;
-		}
+		//if (Car::collision) {
+		//	if (hearts.size() > 0)
+		//		hearts.pop_back();
+		//	else {
+		//		resetGame(false);
+		//		showMenu = true;
+		//	}
+		//	Car::collision = false;
+		//}
 		while (window.pollEvent(ev)) {
 			if (showMenu)
 			{
