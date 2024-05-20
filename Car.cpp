@@ -3,7 +3,6 @@
 Car::Car() {	
 	
 	setStats();
-	this->turn = rand() % 2 + 1;
 	this->stop = false;
 	std::unique_lock<std::mutex> lock(Car::mutex);
 	objects.push_back(this);
@@ -44,8 +43,10 @@ void Car::UnicMove() {
 		if ((pos.first < width_screen+60 && pos.first > -60) && (pos.second < height_screen+60 && pos.second > -60)) {
 			if (this->start_pos == 1) {
 				if (turn != 0) {
-					if (pos.second < (height_screen / 2) + this->getSize().y)
+					if (pos.second < (height_screen / 2) + this->getSize().y) {
 						move(0, speed);
+						blinker.move(0, speed);
+					}
 					else if (turn == 1)
 						move(speed, 0);
 					else if (turn == 2)
@@ -92,7 +93,7 @@ void Car::UnicMove() {
 					move(0, -speed);
 
 			}	
-		std::this_thread::sleep_for(std::chrono::microseconds(rand()%500 + 200));
+		std::this_thread::sleep_for(std::chrono::microseconds(700));
 		}
 		else {
 			this->setStats();
@@ -132,10 +133,17 @@ void Car::checkAllCollisions() {
 	std::cout << "terminate_checkAllCollisions: " << std::this_thread::get_id() << std::endl;
 }
 void Car::setStats() {
-	this->start_pos = rand() % 4 + 1;
-	this->speed = rand() % 5 + 1;
+	this->turn = 1;
+	this->to_blink = 0;
+	this->start_pos = 1;
+	this->speed = (rand()%5 )/ 10.0f ;
 	this->setSize(sf::Vector2f(25, 25));
+	this->setOutlineColor(sf::Color::Black);
+	this->setOutlineThickness(1);
 	this->setFillColor(sf::Color::White);
+	this->blinking = 0;
+
+
 
 	if (start_pos == 1)
 		this->setPosition(340, -50);
@@ -145,6 +153,18 @@ void Car::setStats() {
 		this->setPosition(this->width_screen+50, 325);
 	else if (start_pos == 4)
 		this->setPosition(425, this->height_screen+50);
+
+	if (turn != 0)
+	{
+		blinker.setFillColor(sf::Color::Yellow);
+		blinker.setRadius(4);
+		blinker.setOutlineColor(sf::Color::Black);
+		blinker.setOutlineThickness(1);
+		if (start_pos == 1)
+			if (turn == 1)
+				blinker.setPosition(340 + 21, -50 + 21);
+
+	}
 	
 }
  bool Car::checkCollison( Car& other) {
@@ -188,7 +208,24 @@ void Car::setStats() {
 		 std::cout << Car::objects.size() << std::endl;
 	 }
  }
-
+ void Car::draw(sf::RenderWindow &window) {
+	 //std::unique_lock<std::mutex> lock(Car::mutex);
+	
+	 for (Car* obj : objects) {
+		 window.draw(*obj);
+		 if(obj->blinking > 40){
+			 obj->to_blink =20 ;
+			 obj->blinking = 0;
+		 }
+			
+		 if (obj->to_blink > 0) {
+			 obj->to_blink--;
+			 window.draw(obj->blinker);
+		 }
+		 else
+			 obj->blinking += 1;
+	 }
+ }
 
  std::mutex Car::mutex;
  std::vector<Car*> Car::objects;

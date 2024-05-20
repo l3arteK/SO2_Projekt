@@ -90,7 +90,7 @@ int main() {
 	srand(time(NULL));
 	sf::RenderWindow window(sf::VideoMode(max_width, max_height), "Symulator_ruchu_drogowe", sf::Style::Titlebar | sf::Style::Close);
 	sf::Event ev;
-
+	window.setFramerateLimit(60);
 
 
 
@@ -179,9 +179,10 @@ int main() {
 			window.draw(horizontal);
 			window.draw(vertical);
 			drawHealth(window);
-			for (auto& obj : Car::objects) {
-				window.draw(*obj);
-			}
+			//for (auto& obj : Car::objects) {
+			//	window.draw(*obj);
+			//}
+			Car::draw(window);
 		}
 		
 		window.display();

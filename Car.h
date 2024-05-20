@@ -23,6 +23,7 @@ public:
 	static std::atomic<bool> checkingCollision;
 	void setScreenSize(int width_screen, int height_screen);
 	static bool collision;
+	static void draw(sf::RenderWindow& window);
 private:
 	void UnicMove();
 	std::mutex mutex_stop;
@@ -35,7 +36,9 @@ private:
 	int turn;
 	std::thread mvThread;
 	void setStats();
-	
+	sf::CircleShape blinker;
+	std::atomic<int> blinking;
+	std::atomic<int> to_blink;
 	
 
 
