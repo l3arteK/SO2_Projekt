@@ -111,7 +111,7 @@ void Car::UnicMove() {
 			else if (this->start_pos == 4)
 			{
 				if (turn == 1 || turn == 2) {
-					if (pos.first > (SCREEN_HEIGHT / 2) + this->getSize().x) {
+					if (pos.second > (SCREEN_HEIGHT / 2) + this->getSize().y) {
 						move(0, -speed);
 						blinker.move(0, -speed);
 					}
@@ -178,8 +178,8 @@ void Car::setStats() {
 	if (turn != 0)
 		blink = true;
 	this->to_blink = 0;
-	this->start_pos = 2;
-	this->speed = (rand()%5 )/ 10.0f + 0.1 ;
+	this->start_pos = rand()%4 + 1;
+	this->speed = (rand()%3 )/ 10.0f + 0.1 ;
 	this->setSize(sf::Vector2f(25, 25));
 	this->setOutlineColor(sf::Color::Black);
 	this->setOutlineThickness(1);
@@ -207,7 +207,19 @@ void Car::setStats() {
 			else
 				blinker.setPosition(startPos[1][0] + this->getSize().x - blinker.getRadius(), startPos[1][1]);
 		}
-		std::cout << blinker.getPosition().x << " " << blinker.getPosition().y << std::endl;
+		else if (start_pos == 3) {
+			if (turn == 1)
+				blinker.setPosition(startPos[2][0] - (blinker.getRadius() / 2), startPos[2][1] + this->getSize().y - blinker.getRadius());
+			else
+				blinker.setPosition(startPos[2][0] - (blinker.getRadius() / 2) , startPos[2][1] - (blinker.getRadius() / 2));
+		}
+		else if (start_pos == 4) {
+			if (turn == 1)
+				blinker.setPosition(startPos[3][0] + this->getSize().x - blinker.getRadius(), startPos[3][1]);
+				
+			else
+				blinker.setPosition(startPos[3][0] - (blinker.getRadius() / 2), startPos[3][1] - (blinker.getRadius() / 2));
+		}
 		//lse if (start_)
 
 
