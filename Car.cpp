@@ -40,40 +40,69 @@ void Car::UnicMove() {
 		cv_stop.wait(lock, [this] { return !stop; });
 		lock.unlock();
 		std::pair<int, int> pos = this->getPos();
-		if ((pos.first < width_screen+60 && pos.first > -60) && (pos.second < height_screen+60 && pos.second > -60)) {
+
+		if ((pos.first < SCREEN_WIDTH+60 && pos.first > -60) && (pos.second < SCREEN_HEIGHT +60 && pos.second > -60)) {
 			if (this->start_pos == 1) {
-				if (turn != 0) {
-					if (pos.second < (height_screen / 2) + this->getSize().y) {
+				if (turn == 1 || turn == 2) {
+					if (pos.second < (SCREEN_HEIGHT / 2) + this->getSize().y) {
 						move(0, speed);
 						blinker.move(0, speed);
 					}
-					else if (turn == 1)
+					else if (turn == 1) {
+						if (this->blink)
+							this->blink = false;
 						move(speed, 0);
-					else if (turn == 2)
+						blinker.move(speed, 0);
+					}
+					else if (turn == 2) {
+						if (this->blink)
+							this->blink = false;
 						move(-speed, 0);
+						blinker.move(-speed, 0);
+					}
 				}else
 					move(0, speed);
 			}
 			else if (this->start_pos == 2) {
-				if (turn != 0) {
-					if (pos.first < (width_screen / 2) + this->getSize().x)
+				if (turn == 1 || turn == 2) {
+					if (pos.first < (SCREEN_WIDTH/ 2) + this->getSize().x) {
 						move(speed, 0);
-					else if (turn == 1)
+						blinker.move(speed, 0);
+					}
+					else if (turn == 1) {
+						if (this->blink)
+							this->blink = false;
 						move(0, speed);
-					else if (turn == 2)
-						move(0,-speed);
+						blinker.move(0, speed);
+					}
+					else if (turn == 2) {
+						if (this->blink)
+							this->blink = false;
+						move(0, -speed);
+						blinker.move(0, -speed);
+					}
 				}
 				else
 					move(speed, 0);
 			}
 			else if (this->start_pos == 3){
-				if (turn != 0) {
-					if (pos.first > (width_screen / 2) + this->getSize().x)
+				if (turn == 1 || turn == 2) {
+					if (pos.first > (SCREEN_WIDTH/ 2) + this->getSize().x) {
 						move(-speed, 0);
-					else if (turn == 1)
+						blinker.move(-speed, 0);
+					}
+					else if (turn == 1) {
+						if (this->blink)
+							this->blink = false;
 						move(0, speed);
-					else if (turn == 2)
+						blinker.move(0, speed);
+					}
+					else if (turn == 2) {
+						if (this->blink)
+							this->blink = false;
 						move(0, -speed);
+						blinker.move(0, -speed);
+					}
 				}
 				else
 					move(-speed, 0);
@@ -81,26 +110,37 @@ void Car::UnicMove() {
 				}
 			else if (this->start_pos == 4)
 			{
-				if (turn != 0) {
-					if (pos.first > (height_screen / 2) + this->getSize().x)
+				if (turn == 1 || turn == 2) {
+					if (pos.first > (SCREEN_HEIGHT / 2) + this->getSize().x) {
 						move(0, -speed);
-					else if (turn == 1)
+						blinker.move(0, -speed);
+					}
+					else if (turn == 1) {
+						if (this->blink)
+							this->blink = false;
 						move(speed, 0);
-					else if (turn == 2)
+						blinker.move(speed, 0);
+					}
+					else if (turn == 2) {
+						if (this->blink)
+							this->blink = false;
 						move(-speed, 0);
+						blinker.move(-speed, 0);
+					}
 				}
 				else
 					move(0, -speed);
 
+				
 			}	
-		std::this_thread::sleep_for(std::chrono::microseconds(700));
+			
+		std::this_thread::sleep_for(std::chrono::microseconds(1000));
 		}
 		else {
 			this->setStats();
 		}
 		/*std::cout << "moving: " << std::this_thread::get_id() << std::endl;*/
-	} 
-	//std::cout << "terminate_moving: " << std::this_thread::get_id() << std::endl;	
+	} 	
 }
 std::thread Car::moveThread() {
 	return std::thread(&Car::UnicMove, this);
@@ -114,7 +154,7 @@ void Car::checkAllCollisions() {
 			for (int j = i + 1; j < objects.size(); j++) {
 				if (objects[i]->checkCollison(*objects[j])) {
 					collision = true;
-					std::cout << "Kolizja!" << std::endl;
+					//std::cout << "Kolizja!" << std::endl;
 					Car* c1 = objects[i];
 					Car* c2 = objects[j];
 					lock.unlock();
@@ -133,10 +173,13 @@ void Car::checkAllCollisions() {
 	std::cout << "terminate_checkAllCollisions: " << std::this_thread::get_id() << std::endl;
 }
 void Car::setStats() {
-	this->turn = 1;
+	std::cout << "Setstats" << std::endl;
+	this->turn = rand()%10;
+	if (turn != 0)
+		blink = true;
 	this->to_blink = 0;
-	this->start_pos = 1;
-	this->speed = (rand()%5 )/ 10.0f ;
+	this->start_pos = 2;
+	this->speed = (rand()%5 )/ 10.0f + 0.1 ;
 	this->setSize(sf::Vector2f(25, 25));
 	this->setOutlineColor(sf::Color::Black);
 	this->setOutlineThickness(1);
@@ -144,17 +187,10 @@ void Car::setStats() {
 	this->blinking = 0;
 
 
+	this->setPosition(startPos[start_pos-1][0], startPos[start_pos-1][1]);
 
-	if (start_pos == 1)
-		this->setPosition(340, -50);
-	else if (start_pos == 2)
-		this->setPosition(-50, 240);
-	else if (start_pos == 3)
-		this->setPosition(this->width_screen+50, 325);
-	else if (start_pos == 4)
-		this->setPosition(425, this->height_screen+50);
 
-	if (turn != 0)
+	if (turn  == 1 || turn == 2)
 	{
 		blinker.setFillColor(sf::Color::Yellow);
 		blinker.setRadius(4);
@@ -162,7 +198,18 @@ void Car::setStats() {
 		blinker.setOutlineThickness(1);
 		if (start_pos == 1)
 			if (turn == 1)
-				blinker.setPosition(340 + 21, -50 + 21);
+				blinker.setPosition(startPos[0][0] + this->getSize().x - blinker.getRadius(), startPos[0][1] + this->getSize().x - blinker.getRadius());
+			else
+				blinker.setPosition(startPos[0][0] - (blinker.getRadius()/2), startPos[0][1] + this->getSize().x - blinker.getRadius());
+		else if (start_pos == 2) {
+			if(turn == 1)
+				blinker.setPosition(startPos[1][0] + this->getSize().x - blinker.getRadius(), startPos[1][1] + this->getSize().x - blinker.getRadius());
+			else
+				blinker.setPosition(startPos[1][0] + this->getSize().x - blinker.getRadius(), startPos[1][1]);
+		}
+		std::cout << blinker.getPosition().x << " " << blinker.getPosition().y << std::endl;
+		//lse if (start_)
+
 
 	}
 	
@@ -213,7 +260,8 @@ void Car::setStats() {
 	
 	 for (Car* obj : objects) {
 		 window.draw(*obj);
-		 if(obj->blinking > 40){
+
+		 if(obj->blinking > 40 && obj->blink ){
 			 obj->to_blink =20 ;
 			 obj->blinking = 0;
 		 }
@@ -233,3 +281,10 @@ void Car::setStats() {
  int Car::height_screen = 600;
  int Car::width_screen = 800;
  bool Car::collision = false;
+ int Car::startPos[4][2] = {
+	 {340,-50},
+	 {-50, 240},
+	 {SCREEN_WIDTH + 50, 325},
+	 {425, SCREEN_HEIGHT + 50}
+ };
+

@@ -11,7 +11,8 @@
 #include <SFML/Window.hpp>
 #include <SFML/Audio.hpp>
 #include <SFML/Network.hpp>
-int max_height = 600, max_width = 800;
+
+//int SCREEN_WIDTH = 600, SCREEN_WIDTH = 800;
 std::vector<std::thread> carThreads;
 std::vector<sf::CircleShape> hearts;
 std::thread addCar_thread;
@@ -32,7 +33,7 @@ void addCar() {
 			}
 			if(!finish)
 				std::this_thread::sleep_for(std::chrono::milliseconds(rand() % 700 + 100 * (maxCars_ - carsOnScreen)));
-			std::cout << std::this_thread::get_id() << std::endl;
+			//std::cout << std::this_thread::get_id() << std::endl;
 		}
 	}
 void initGame(){
@@ -78,17 +79,17 @@ void generateHealt(int health) {
 		sf::CircleShape ch;
 		ch.setFillColor(sf::Color::Red);
 		ch.setRadius(8);
-		float x = max_width - 30 * (i + 1);
+		float x = SCREEN_WIDTH - 30 * (i + 1);
 		ch.setPosition({ x, 25 });
 		hearts.push_back(ch);
 	}
 }
 int main() {
 	bool showMenu = true;
-	Menu menu(max_width,max_height);
+	Menu menu(SCREEN_WIDTH,SCREEN_WIDTH);
 
 	srand(time(NULL));
-	sf::RenderWindow window(sf::VideoMode(max_width, max_height), "Symulator_ruchu_drogowe", sf::Style::Titlebar | sf::Style::Close);
+	sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Symulator_ruchu_drogowe", sf::Style::Titlebar | sf::Style::Close);
 	sf::Event ev;
 	window.setFramerateLimit(60);
 

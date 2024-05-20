@@ -38,6 +38,7 @@ private:
 	bool handleOptionsEvent(const sf::Event& event);
 	void updatePosition();
 	void updatePositionText();
+	
 
 
 };

@@ -7,6 +7,8 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#define SCREEN_HEIGHT 600
+#define SCREEN_WIDTH 800
 class Car :public sf::RectangleShape{
 public:
 	~Car();
@@ -37,8 +39,10 @@ private:
 	std::thread mvThread;
 	void setStats();
 	sf::CircleShape blinker;
-	std::atomic<int> blinking;
-	std::atomic<int> to_blink;
+	int blinking;
+	int to_blink;
+	std::atomic<bool> blink;
+	static int startPos[4][2];
 	
 
 
