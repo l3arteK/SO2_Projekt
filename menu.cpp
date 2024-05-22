@@ -6,10 +6,8 @@ Menu::Menu(float width, float height)
 	this->maxCars = "5";
 	this->x_size = width;
 	this->y_size = height;
-	if (!font.loadFromFile("arial.ttf"))
-	{
-		// handle error
-	}
+	font.loadFromFile("arial.ttf");
+
 	state = State::MainMenu;
 
 	//main menu
@@ -114,12 +112,12 @@ bool Menu::handleOptionsEvent(const sf::Event& event) {
 			state = State::MainMenu;
 		break;
 	case sf::Event::TextEntered:
-		if (event.text.unicode >= 48 && event.text.unicode <= 57) { // Cyfry 0-9
+		if (event.text.unicode >= 48 && event.text.unicode <= 57) {
 			maxCars += static_cast<char>(event.text.unicode);
 			options[1].setString(maxCars);
 
 		}
-		else if (event.text.unicode == 8 && !maxCars.empty()) { // Backspace
+		else if (event.text.unicode == 8 && !maxCars.empty()) { 
 			maxCars.pop_back();
 			options[1].setString(maxCars);
 		}

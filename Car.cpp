@@ -1,15 +1,27 @@
 #include "Car.h"
 #include <iostream>
+#include <set>
+
+std::mutex Car::mutex_objects;
+std::vector<Car*> Car::objects;
+std::atomic<bool> Car::checkingCollision = true;
+
+bool Car::collision = false;
+int Car::startPos[4][2] = {
+	{340,-50},
+	{-50, 325},
+	{SCREEN_WIDTH + 50, 240},
+	{425, SCREEN_HEIGHT + 50}
+};
 Car::Car() {	
 	
 	setStats();
 	this->stop = false;
-	std::unique_lock<std::mutex> lock(Car::mutex);
+	std::unique_lock<std::mutex> lock(Car::mutex_objects);
 	objects.push_back(this);
 	this->mvThread = std::thread(&Car::UnicMove, this);
 }
 std::pair<float, float> Car::getPos()  {
-	std::lock_guard<std::mutex> lock(mtx_getPos);
 	sf::Vector2f vec = this->getPosition();
 	return { vec.x, vec.y };
 }
@@ -29,11 +41,6 @@ void Car::startCar() {
 	}
 
 }
-void Car::setScreenSize(int width_screen, int height_screen)
-{
-	this->width_screen = width_screen;
-	this->height_screen = height_screen;
-}
 void Car::UnicMove() {
 	while (moving) {
 		std::unique_lock<std::mutex> lock(mutex_stop);
@@ -44,7 +51,7 @@ void Car::UnicMove() {
 		if ((pos.first < SCREEN_WIDTH+60 && pos.first > -60) && (pos.second < SCREEN_HEIGHT +60 && pos.second > -60)) {
 			if (this->start_pos == 1) {
 				if (turn == 1 || turn == 2) {
-					if (pos.second < (SCREEN_HEIGHT / 2) + this->getSize().y) {
+					if ( (pos.second < (SCREEN_HEIGHT / 2) + this->getSize().y) && (pos.second < (SCREEN_HEIGHT / 2) + this->getSize().y -75 || turn!=2 )){
 						move(0, speed);
 						blinker.move(0, speed);
 					}
@@ -65,7 +72,7 @@ void Car::UnicMove() {
 			}
 			else if (this->start_pos == 2) {
 				if (turn == 1 || turn == 2) {
-					if (pos.first < (SCREEN_WIDTH/ 2) + this->getSize().x) {
+					if ((pos.first < (SCREEN_WIDTH/ 2) + this->getSize().x) && (pos.first < (SCREEN_WIDTH / 2) + this->getSize().x - 75 || turn != 1) ) {
 						move(speed, 0);
 						blinker.move(speed, 0);
 					}
@@ -87,7 +94,7 @@ void Car::UnicMove() {
 			}
 			else if (this->start_pos == 3){
 				if (turn == 1 || turn == 2) {
-					if (pos.first > (SCREEN_WIDTH/ 2) + this->getSize().x) {
+					if ((pos.first > (SCREEN_WIDTH / 2) + this->getSize().x) || (pos.first > (SCREEN_WIDTH / 2) + this->getSize().x - 75 && turn == 1)) {
 						move(-speed, 0);
 						blinker.move(-speed, 0);
 					}
@@ -111,11 +118,11 @@ void Car::UnicMove() {
 			else if (this->start_pos == 4)
 			{
 				if (turn == 1 || turn == 2) {
-					if (pos.second > (SCREEN_HEIGHT / 2) + this->getSize().y) {
+					if ((pos.second > (SCREEN_HEIGHT / 2) + this->getSize().y) || ((pos.second > (SCREEN_HEIGHT / 2) + this->getSize().y - 75) && turn == 2)) {
 						move(0, -speed);
 						blinker.move(0, -speed);
 					}
-					else if (turn == 1) {
+					else if (turn == 1 ) {
 						if (this->blink)
 							this->blink = false;
 						move(speed, 0);
@@ -139,46 +146,36 @@ void Car::UnicMove() {
 		else {
 			this->setStats();
 		}
-		/*std::cout << "moving: " << std::this_thread::get_id() << std::endl;*/
 	} 	
 }
-std::thread Car::moveThread() {
-	return std::thread(&Car::UnicMove, this);
 
-}
 void Car::checkAllCollisions() {
-	std::cout << "start_checkAllCollisions: " << std::this_thread::get_id() << std::endl;
+	std::set <Car*> to_delete;
 	while (checkingCollision) {
-		std::unique_lock<std::mutex> lock(Car::mutex);
+		std::unique_lock<std::mutex> lock(Car::mutex_objects);
 		for (int i = 0; i < objects.size(); i++) {
 			for (int j = i + 1; j < objects.size(); j++) {
 				if (objects[i]->checkCollison(*objects[j])) {
 					collision = true;
-					//std::cout << "Kolizja!" << std::endl;
-					Car* c1 = objects[i];
-					Car* c2 = objects[j];
-					lock.unlock();
-					//c1->~Car();
-					//c2->~Car();
-					break;
+					to_delete.insert(objects[i]);
+					to_delete.insert(objects[j]);
 				}
 			}
-			if (collision) {
-				collision = false;
-				break;
-			}
+
 		}
-	
+		lock.unlock();
+		for (auto& obj : to_delete)
+			obj->~Car();
+		to_delete.clear();
 	}
-	std::cout << "terminate_checkAllCollisions: " << std::this_thread::get_id() << std::endl;
+
 }
 void Car::setStats() {
-	std::cout << "Setstats" << std::endl;
-	this->turn = rand()%10;
-	if (turn != 0)
-		blink = true;
+	this->turn = rand()%5;
+	blink = false;
 	this->to_blink = 0;
 	this->start_pos = rand()%4 + 1;
+
 	this->speed = (rand()%3 )/ 10.0f + 0.1 ;
 	this->setSize(sf::Vector2f(25, 25));
 	this->setOutlineColor(sf::Color::Black);
@@ -186,12 +183,11 @@ void Car::setStats() {
 	this->setFillColor(sf::Color::White);
 	this->blinking = 0;
 
-
 	this->setPosition(startPos[start_pos-1][0], startPos[start_pos-1][1]);
-
 
 	if (turn  == 1 || turn == 2)
 	{
+		blink = true;
 		blinker.setFillColor(sf::Color::Yellow);
 		blinker.setRadius(4);
 		blinker.setOutlineColor(sf::Color::Black);
@@ -220,7 +216,7 @@ void Car::setStats() {
 			else
 				blinker.setPosition(startPos[3][0] - (blinker.getRadius() / 2), startPos[3][1] - (blinker.getRadius() / 2));
 		}
-		//lse if (start_)
+
 
 
 	}
@@ -243,33 +239,24 @@ void Car::setStats() {
 	 float x2_2 = othPos.first + size2_x;
 	 float y2_1 = othPos.second;
 	 float y2_2 = othPos.second + size2_y;
-	 //std::cout << othPos.first << " " << othPos.second << std::endl;
-	 //std::cout << thisPos.first << " " << thisPos.second << std::endl;
 	 return (!(x1_2 < x2_1 || x1_1 > x2_2 || y1_2 < y2_1 || y1_1 >  y2_2));
  }
  Car::~Car() { 
 	 std::unique_lock<std::mutex> lock1(mutex_stop);
-	 std::cout << "destructor Car!" << std::endl;
 	 this->moving = false;
 	 lock1.unlock();
 	 this->startCar();
-	 if (mvThread.joinable()) {
+	 if (mvThread.joinable()) 
 		 mvThread.join();
-		 std::cout << "mvThread join" << std::endl;
-	 }
-		
 
-	 std::unique_lock<std::mutex> lock(Car::mutex);
+	 std::unique_lock<std::mutex> lock(Car::mutex_objects);
 	 auto it = std::find(Car::objects.begin(), Car::objects.end(), this);
-	 if (it != Car::objects.end()) {
-		 std::cout << Car::objects.size() << std::endl;
+	 if (it != Car::objects.end()) 
 		 Car::objects.erase(it);
-		 std::cout << Car::objects.size() << std::endl;
-	 }
+
+	 
  }
  void Car::draw(sf::RenderWindow &window) {
-	 //std::unique_lock<std::mutex> lock(Car::mutex);
-	
 	 for (Car* obj : objects) {
 		 window.draw(*obj);
 
@@ -287,16 +274,5 @@ void Car::setStats() {
 	 }
  }
 
- std::mutex Car::mutex;
- std::vector<Car*> Car::objects;
- std::atomic<bool> Car::checkingCollision = true;
- int Car::height_screen = 600;
- int Car::width_screen = 800;
- bool Car::collision = false;
- int Car::startPos[4][2] = {
-	 {340,-50},
-	 {-50, 240},
-	 {SCREEN_WIDTH + 50, 325},
-	 {425, SCREEN_HEIGHT + 50}
- };
+
 

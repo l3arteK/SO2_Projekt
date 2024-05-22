@@ -13,36 +13,63 @@ class Car :public sf::RectangleShape{
 public:
 	~Car();
 	Car();
-	static std::vector<Car*> objects;
-	static std::mutex mutex;
-	static void checkAllCollisions();
-	std::thread moveThread();
-	bool checkCollison(Car& other);
-	std::pair<float, float> getPos() ;
-	void stopCar();
-	void startCar();
-	std::atomic<bool> moving = true;
-	static std::atomic<bool> checkingCollision;
-	void setScreenSize(int width_screen, int height_screen);
-	static bool collision;
+
+	// draws a cars on the screen
 	static void draw(sf::RenderWindow& window);
+	// checks the collision between all cars
+	static void checkAllCollisions();
+	// stores all created cars
+	static std::vector<Car*> objects;
+	// protects access to 'objects'
+	static std::mutex mutex_objects;
+	// stores collision information
+	static bool collision;
+	// allows to stop the thread responsible for collision checking
+	static std::atomic<bool> checkingCollision;
+
+	// checks the collision between two cars
+	bool checkCollison(Car& other);
+	// stops the car
+	void stopCar();
+	// starts the car
+	void startCar();
+	
+	// return actual position of car
+	std::pair<float, float> getPos();
+	// allows to stop the thread responsible for moving the car
+	std::atomic<bool> moving = true;
 private:
-	void UnicMove();
-	std::mutex mutex_stop;
-	std::mutex mtx_getPos;
-	bool stop;
-	std::condition_variable cv_stop;
+	// stores the start position of cars
+	static int startPos[4][2];
 	int start_pos;
-	float speed;
-	static int width_screen, height_screen;
-	int turn;
-	std::thread mvThread;
+	// moves the car
+	void UnicMove();
+	// sets the initial values of the object
 	void setStats();
+
+	// a flag indicating that the turn signal is showing or not
+	std::atomic<bool> blink;
+	// shape of blinker
 	sf::CircleShape blinker;
+	// allows to stop the car
+	std::mutex mutex_stop;
+	std::condition_variable cv_stop;\
+	bool stop;
+	//stores the unicMove function in thread
+	std::thread mvThread;
+
+	
+	//stores the speed of the car
+	float speed;
+
+	// a flag indicating that the car may turn // 1 or 2 -> yes 
+	int turn;
+
+	// variables that help in drawing a turn signal
 	int blinking;
 	int to_blink;
-	std::atomic<bool> blink;
-	static int startPos[4][2];
+	
+	
 	
 
 
