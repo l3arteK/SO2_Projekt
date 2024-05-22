@@ -7,6 +7,7 @@ Prosta gra napisana w języku C++ przy pomocy biblioteki SFML z napisanymi włas
 
 ## Opis rozgrywki
 ![Gameplay_view.png](Gameplay_view.png)
+
 Gra polega na unikaniu kolizji między nadjeżdżającymi samochodami na skrzyżowaniu. Niektóre z nich dodatkowo zmieniają tor jazdy sugerując to wcześniej za pomocą kierunkowskazu. Każda kolizja zmniejsza życie, aż gra się kończy i musimy zaczynać od nowa.
 
 
