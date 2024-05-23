@@ -12,7 +12,7 @@ Gra polega na unikaniu kolizji między nadjeżdżającymi samochodami na skrzyż
 
 # Sterowanie
 - Gra - myszka, najeżdżając myszką na samochód zatrzymujemy go
-- Menu - strzałki(góra, dół) 
+- Menu - strzałki(góra, dół) i enter(potwierdzenie wyboru)
 
 ## Wątki
 - addCar_thread - dodawanie samochodów na plansze
