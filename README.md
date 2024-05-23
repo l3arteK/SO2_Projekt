@@ -10,6 +10,9 @@ Prosta gra napisana w języku C++ przy pomocy biblioteki SFML z napisanymi włas
 
 Gra polega na unikaniu kolizji między nadjeżdżającymi samochodami na skrzyżowaniu. Niektóre z nich dodatkowo zmieniają tor jazdy sugerując to wcześniej za pomocą kierunkowskazu. Każda kolizja zmniejsza życie, aż gra się kończy i musimy zaczynać od nowa.
 
+# Sterowanie
+- Gra - myszka, najeżdżając myszką na samochód zatrzymujemy go
+- Menu - strzałki(góra, dół) 
 
 ## Wątki
 - addCar_thread - dodawanie samochodów na plansze
